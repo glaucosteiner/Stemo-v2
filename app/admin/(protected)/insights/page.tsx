@@ -20,7 +20,11 @@ export default function InsightsAdminPage() {
 
   const fetchArticles = async () => {
     const supabase = createBrowserClient()
-    const { data } = await supabase.from('articles').select('*').order('is_published', { ascending: false }).order('published_at', { ascending: false })
+    const { data } = await supabase
+      .from('articles')
+      .select('*')
+      .order('is_published', { ascending: false })
+      .order('published_at', { ascending: false })
     setArticles(data || [])
     setLoading(false)
   }
@@ -58,6 +62,7 @@ export default function InsightsAdminPage() {
       setShowForm(false)
       setEditingId(null)
       setFormData({})
+      setShowPreview(false)
       fetchArticles()
     } catch (error) {
       console.error('Erro ao salvar artigo:', error)
@@ -68,16 +73,15 @@ export default function InsightsAdminPage() {
     setFormData(article)
     setEditingId(article.id)
     setShowForm(true)
+    setShowPreview(false)
   }
 
   const handleDelete = async (id: string) => {
     if (!confirm('Tem certeza?')) return
-
     const supabase = createBrowserClient()
     await supabase.from('articles').delete().eq('id', id)
     fetchArticles()
   }
-
 
   const handleToggle = async (article: Article) => {
     const supabase = createBrowserClient()
@@ -100,7 +104,7 @@ export default function InsightsAdminPage() {
         <h1 className="text-3xl font-bold text-white">Insights</h1>
         {!showForm && (
           <button
-            onClick={() => setShowForm(true)}
+            onClick={() => { setShowForm(true); setEditingId(null); setFormData({}); setShowPreview(false) }}
             className="px-6 py-3 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold hover:shadow-lg transition-all"
           >
             + Novo Artigo
@@ -108,9 +112,10 @@ export default function InsightsAdminPage() {
         )}
       </div>
 
-      {/* Form */}
       {showForm && (
         <div className="mb-12 p-8 rounded-xl border border-white/10 bg-gradient-to-br from-slate-900/50 to-transparent">
+          <h2 className="text-xl font-bold text-white mb-6">{editingId ? 'Editar Artigo' : 'Novo Artigo'}</h2>
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
               <div>
@@ -125,7 +130,7 @@ export default function InsightsAdminPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-white mb-2">Slug</label>
+                <label className="block text-sm font-semibold text-white mb-2">Slug*</label>
                 <input
                   type="text"
                   name="slug"
@@ -137,44 +142,25 @@ export default function InsightsAdminPage() {
               </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-semibold text-white mb-2">Categoria*</label>
-                <select
-                  name="category"
-                  value={formData.category || ''}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white"
-                >
-                  <option value="">Selecione...</option>
-                  <option value="IA Estratégica">IA Estratégica</option>
-                  <option value="Transformação Digital">Transformação Digital</option>
-                  <option value="Dados & Analytics">Dados & Analytics</option>
-                  <option value="Gestão & Cultura">Gestão & Cultura</option>
-                  <option value="Nova Economia">Nova Economia</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-white mb-2">Autor</label>
-                <input
-                  type="text"
-                  name="author"
-                  value={formData.author || ''}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white"
-                  placeholder="Equipe Stemo"
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-semibold text-white mb-2">Categoria</label>
+              <input
+                type="text"
+                name="category"
+                value={formData.category || ''}
+                onChange={handleChange}
+                className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white"
+              />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-white mb-2">Resumo (Excerpt)*</label>
+              <label className="block text-sm font-semibold text-white mb-2">Resumo (excerpt)*</label>
               <textarea
                 name="excerpt"
                 value={formData.excerpt || ''}
                 onChange={handleChange}
                 required
-                rows={2}
+                rows={3}
                 className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white resize-none"
               />
             </div>
@@ -186,19 +172,35 @@ export default function InsightsAdminPage() {
                 value={formData.content || ''}
                 onChange={handleChange}
                 required
-                rows={10}
+                rows={14}
                 className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white resize-none font-mono text-sm"
               />
             </div>
 
-            {showPreview && formData.content && (
-              <div className="rounded-lg border border-white/10 bg-white/5 p-6">
-                <p className="text-xs text-slate-500 uppercase font-semibold mb-4">Preview do Conteúdo</p>
-                <div className="prose prose-invert prose-sm max-w-none text-slate-300">
-                  <Markdown remarkPlugins={[remarkGfm]}>{formData.content}</Markdown>
+            {showPreview && formData.content ? (
+              <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-6">
+                <p className="text-xs text-amber-400/80 uppercase font-semibold mb-4 tracking-widest">Preview do artigo</p>
+                <div className="text-slate-300 leading-relaxed space-y-4 text-sm">
+                  <Markdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      h1: ({children}) => <h1 className="text-2xl font-bold text-white mt-6 mb-3">{children}</h1>,
+                      h2: ({children}) => <h2 className="text-xl font-bold text-white mt-5 mb-2">{children}</h2>,
+                      h3: ({children}) => <h3 className="text-lg font-semibold text-white mt-4 mb-2">{children}</h3>,
+                      p: ({children}) => <p className="text-slate-300 mb-3 leading-relaxed">{children}</p>,
+                      strong: ({children}) => <strong className="text-white font-semibold">{children}</strong>,
+                      ul: ({children}) => <ul className="list-disc list-inside space-y-1 text-slate-300 mb-3">{children}</ul>,
+                      ol: ({children}) => <ol className="list-decimal list-inside space-y-1 text-slate-300 mb-3">{children}</ol>,
+                      li: ({children}) => <li className="text-slate-300">{children}</li>,
+                      blockquote: ({children}) => <blockquote className="border-l-4 border-amber-500/50 pl-4 italic text-slate-400 my-4">{children}</blockquote>,
+                      code: ({children}) => <code className="bg-white/10 px-1.5 py-0.5 rounded text-xs font-mono text-amber-300">{children}</code>,
+                    }}
+                  >
+                    {formData.content}
+                  </Markdown>
                 </div>
               </div>
-            )}
+            ) : null}
 
             <div className="grid md:grid-cols-3 gap-6">
               <div>
@@ -217,29 +219,40 @@ export default function InsightsAdminPage() {
                 <input type="text" name="meta_title" value={formData.meta_title || ''} onChange={handleChange} className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white" />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-white mb-2">Meta Descrição</label>
-                <input type="text" name="meta_description" value={formData.meta_description || ''} onChange={handleChange} className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white" />
+                <label className="block text-sm font-semibold text-white mb-2">Keywords (vírgula)</label>
+                <input
+                  type="text"
+                  name="keywords"
+                  value={Array.isArray(formData.keywords) ? formData.keywords.join(', ') : (formData.keywords || '')}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white"
+                />
               </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-semibold text-white mb-2">Meta Descrição</label>
+              <textarea name="meta_description" value={formData.meta_description || ''} onChange={handleChange} rows={2} className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white resize-none" />
+            </div>
+
+            <div className="flex items-center gap-6">
               <div className="flex items-center gap-2">
                 <input type="checkbox" name="is_published" checked={formData.is_published || false} onChange={handleChange} id="pub" className="w-4 h-4" />
-                <label htmlFor="pub" className="text-sm text-slate-400">
-                  Publicado
-                </label>
+                <label htmlFor="pub" className="text-sm text-slate-400">Publicado</label>
               </div>
               <div className="flex items-center gap-2">
                 <input type="checkbox" name="is_featured" checked={formData.is_featured || false} onChange={handleChange} id="feat" className="w-4 h-4" />
-                <label htmlFor="feat" className="text-sm text-slate-400">
-                  Destaque
-                </label>
+                <label htmlFor="feat" className="text-sm text-slate-400">Destaque</label>
               </div>
             </div>
 
             <div className="flex gap-3 pt-4">
-              <button type="button" onClick={() => setShowPreview(!showPreview)} className="px-4 py-2 rounded-lg border border-blue-500/30 text-blue-400 font-semibold hover:bg-blue-500/10 transition-all">
-                {showPreview ? 'Ocultar Preview' : 'Preview'}
+              <button
+                type="button"
+                onClick={() => setShowPreview(!showPreview)}
+                className={`px-4 py-2 rounded-lg border font-semibold transition-all ${showPreview ? 'border-amber-500/50 bg-amber-500/10 text-amber-400' : 'border-blue-500/30 text-blue-400 hover:bg-blue-500/10'}`}
+              >
+                {showPreview ? '✕ Fechar Preview' : '👁 Preview'}
               </button>
               <button
                 type="submit"
@@ -255,37 +268,51 @@ export default function InsightsAdminPage() {
         </div>
       )}
 
-      {/* Articles list */}
-      <div className="space-y-4">
-        {articles.map((article) => (
-          <div key={article.id} className="p-6 rounded-xl border border-white/10 bg-gradient-to-br from-slate-900/50 to-transparent">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h3 className="text-lg font-bold text-white">{article.title}</h3>
-                  {article.is_featured && <span className="px-2 py-1 rounded text-xs bg-yellow-500/20 text-yellow-400">⭐ Destaque</span>}
-                  {article.is_published && <span className="px-2 py-1 rounded text-xs bg-green-500/20 text-green-400">✓ Publicado</span>}
+      {/* Lista de artigos */}
+      {articles.length === 0 ? (
+        <div className="text-center py-16 text-slate-400">
+          <p>Nenhum artigo ainda.</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {articles.map((article) => (
+            <div
+              key={article.id}
+              className="p-6 rounded-xl border border-white/10 bg-gradient-to-br from-slate-900/50 to-transparent"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${article.is_published ? 'bg-green-500/20 text-green-400' : 'bg-slate-500/20 text-slate-400'}`}>
+                      {article.is_published ? 'Publicado' : 'Oculto'}
+                    </span>
+                    {article.is_featured && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 font-semibold">Destaque</span>
+                    )}
+                    <span className="text-xs text-slate-500">{article.category}</span>
+                  </div>
+                  <h3 className="font-bold text-white truncate">{article.title}</h3>
+                  <p className="text-sm text-slate-400 mt-1 line-clamp-2">{article.excerpt}</p>
                 </div>
-                <p className="text-sm text-slate-400">{article.category}</p>
-              </div>
-              <div className="flex gap-2 flex-shrink-0">
-                <button
-                  onClick={() => handleToggle(article)}
-                  className={`px-4 py-2 rounded-lg font-semibold transition-all ${article.is_published ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30' : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'}`}
-                >
-                  {article.is_published ? 'Ocultar' : 'Publicar'}
-                </button>
-                <button onClick={() => handleEdit(article)} className="px-4 py-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 font-semibold transition-all">
-                  Editar
-                </button>
-                <button onClick={() => handleDelete(article.id)} className="px-4 py-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 font-semibold transition-all">
-                  Deletar
-                </button>
+                <div className="flex gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => handleToggle(article)}
+                    className={`px-4 py-2 rounded-lg font-semibold transition-all text-sm ${article.is_published ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30' : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'}`}
+                  >
+                    {article.is_published ? 'Ocultar' : 'Publicar'}
+                  </button>
+                  <button onClick={() => handleEdit(article)} className="px-4 py-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 font-semibold transition-all text-sm">
+                    Editar
+                  </button>
+                  <button onClick={() => handleDelete(article.id)} className="px-4 py-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 font-semibold transition-all text-sm">
+                    Deletar
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
