@@ -71,7 +71,7 @@ const organizationSchema = {
       address: { '@type': 'PostalAddress', addressLocality: 'São Paulo', addressRegion: 'SP', addressCountry: 'BR' },
       geo: { '@type': 'GeoCoordinates', latitude: '-23.5505', longitude: '-46.6333' },
       contactPoint: { '@type': 'ContactPoint', contactType: 'customer service', email: 'contato@stemo.com.br', availableLanguage: 'Portuguese' },
-      sameAs: ['https://www.linkedin.com/company/stemo'],
+      sameAs: ['https://www.linkedin.com/company/stemoadvisory'],
       knowsAbout: ['Inteligência Artificial Estratégica', 'Transformação Digital', 'Consultoria de Tecnologia', 'Gestão de Mudança', 'Desenvolvimento de Software', 'Inteligência de Dados'],
     },
     {

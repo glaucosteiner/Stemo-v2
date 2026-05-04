@@ -125,7 +125,7 @@ export default function Footer({ productsVisible }: FooterProps) {
               <h4 className="text-xs font-bold mb-4 tracking-[2px] uppercase" style={{ color: '#5a5a58' }}>Conectar</h4>
               <ul className="space-y-2">
                 {[
-                  { label: 'LinkedIn', href: 'https://www.linkedin.com/company/stemo', external: true },
+                  { label: 'LinkedIn', href: 'https://www.linkedin.com/company/stemoadvisory', external: true },
                   { label: 'Email', href: 'mailto:contato@stemo.com.br', external: false },
                   { label: 'Fale Conosco', href: '#contato', external: false },
                 ].map((item) => (
