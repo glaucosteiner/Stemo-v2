@@ -1,4 +1,4 @@
-﻿export const dynamic = 'force-dynamic'
+export const dynamic = 'force-dynamic'
 
 import { createServerClient } from '@/lib/supabase-server'
 import Navbar from '@/components/Navbar'
@@ -9,6 +9,7 @@ import Servicos from '@/components/sections/Servicos'
 import Metodologia from '@/components/sections/Metodologia'
 import Parceria from '@/components/sections/Parceria'
 import Resultados from '@/components/sections/Resultados'
+import Produtos from '@/components/sections/Produtos'
 import Insights from '@/components/sections/Insights'
 import FAQ from '@/components/sections/FAQ'
 import Contato from '@/components/sections/Contato'
@@ -18,15 +19,21 @@ import ScrollEffects from '@/components/ScrollEffects'
 export default async function HomePage() {
   let articles = null
   let faqs = null
+  let products = null
+  let productsVisible = false
 
   try {
     const supabase = await createServerClient()
-    const [{ data: a }, { data: f }] = await Promise.all([
-      supabase.from('articles').select('*').eq('is_published', true).order('published_at', { ascending: false }).limit(20),
+    const [{ data: a }, { data: f }, { data: p }, { data: config }] = await Promise.all([
+      supabase.from('articles').select('*').eq('is_published', true).order('published_at', { ascending: false }).limit(5),
       supabase.from('faqs').select('*').eq('is_published', true).order('sort_order'),
+      supabase.from('products').select('*').eq('is_published', true).order('sort_order'),
+      supabase.from('site_config').select('*').eq('key', 'products_section_visible').single(),
     ])
     articles = a
     faqs = f
+    products = p
+    productsVisible = config?.value === true
   } catch (err) {
     console.error('[HomePage v2] Database error:', err)
   }
@@ -35,7 +42,7 @@ export default async function HomePage() {
     <>
       <ScrollEffects />
       <div id="read-progress" />
-      <Navbar productsVisible={false} />
+      <Navbar productsVisible={productsVisible} />
       <main>
         <Hero />
         <PontoDeVista />
@@ -44,12 +51,12 @@ export default async function HomePage() {
         <Metodologia />
         <Parceria />
         <Resultados />
+        {productsVisible && <Produtos products={products || []} />}
         <Insights articles={articles || []} />
         <FAQ faqs={faqs || []} />
         <Contato />
       </main>
-      <Footer productsVisible={false} />
+      <Footer productsVisible={productsVisible} />
     </>
   )
 }
-
