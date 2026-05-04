@@ -25,7 +25,7 @@ export default async function HomePage() {
   try {
     const supabase = await createServerClient()
     const [{ data: a }, { data: f }, { data: p }, { data: config }] = await Promise.all([
-      supabase.from('articles').select('*').eq('is_published', true).order('published_at', { ascending: false }).limit(5),
+      supabase.from('articles').select('*').eq('is_published', true).eq('is_featured', true).order('published_at', { ascending: false }),
       supabase.from('faqs').select('*').eq('is_published', true).order('sort_order'),
       supabase.from('products').select('*').eq('is_published', true).order('sort_order'),
       supabase.from('site_config').select('*').eq('key', 'products_section_visible').single(),
