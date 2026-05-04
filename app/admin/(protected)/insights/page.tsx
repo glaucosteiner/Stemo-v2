@@ -1,4 +1,6 @@
 'use client'
+import Markdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { useEffect, useState } from 'react'
 import { createBrowserClient } from '@/lib/supabase'
 import type { Article } from '@/lib/supabase'
@@ -18,7 +20,7 @@ export default function InsightsAdminPage() {
 
   const fetchArticles = async () => {
     const supabase = createBrowserClient()
-    const { data } = await supabase.from('articles').select('*').order('published_at', { ascending: false })
+    const { data } = await supabase.from('articles').select('*').order('is_published', { ascending: false }).order('published_at', { ascending: false })
     setArticles(data || [])
     setLoading(false)
   }
@@ -73,6 +75,13 @@ export default function InsightsAdminPage() {
 
     const supabase = createBrowserClient()
     await supabase.from('articles').delete().eq('id', id)
+    fetchArticles()
+  }
+
+
+  const handleToggle = async (article: Article) => {
+    const supabase = createBrowserClient()
+    await supabase.from('articles').update({ is_published: !article.is_published }).eq('id', article.id)
     fetchArticles()
   }
 
@@ -251,6 +260,12 @@ export default function InsightsAdminPage() {
                 <p className="text-sm text-slate-400">{article.category}</p>
               </div>
               <div className="flex gap-2 flex-shrink-0">
+                <button
+                  onClick={() => handleToggle(article)}
+                  className={`px-4 py-2 rounded-lg font-semibold transition-all ${article.is_published ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30' : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'}`}
+                >
+                  {article.is_published ? 'Ocultar' : 'Publicar'}
+                </button>
                 <button onClick={() => handleEdit(article)} className="px-4 py-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 font-semibold transition-all">
                   Editar
                 </button>
