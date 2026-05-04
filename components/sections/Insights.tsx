@@ -8,7 +8,6 @@ interface InsightsProps {
 }
 
 export default function Insights({ articles }: InsightsProps) {
-  // Primeiro artigo vira o card grande; os demais vao para o grid
   const featured = articles[0] ?? null
   const regular = articles.slice(1)
 
@@ -38,26 +37,31 @@ export default function Insights({ articles }: InsightsProps) {
                 className="grid md:grid-cols-2 gap-0 rounded-xl overflow-hidden"
                 style={{ border: '1px solid rgba(201,168,76,0.15)' }}
               >
+                {/* Left panel — titulo em destaque */}
                 <div
-                  className="relative flex flex-col justify-end h-48 md:h-auto p-8 overflow-hidden"
+                  className="relative flex flex-col justify-between h-48 md:h-auto p-8 overflow-hidden"
                   style={{ background: 'rgba(201,168,76,0.05)' }}
                 >
                   <div className="absolute inset-0 opacity-10" style={{
                     backgroundImage: 'repeating-linear-gradient(45deg, rgba(201,168,76,0.3) 0px, rgba(201,168,76,0.3) 1px, transparent 1px, transparent 28px)',
                   }} />
+                  {/* Badge destaque */}
                   <p
-                    className="relative text-[11px] font-bold tracking-[4px] uppercase mb-2"
-                    style={{ color: 'rgba(201,168,76,0.4)' }}
+                    className="relative text-[11px] font-bold tracking-[4px] uppercase"
+                    style={{ color: 'rgba(201,168,76,0.5)' }}
                   >
                     destaque
                   </p>
+                  {/* Titulo do artigo — proeminente */}
                   <p
-                    className="relative text-3xl md:text-4xl font-black leading-none"
-                    style={{ color: 'rgba(201,168,76,0.12)' }}
+                    className="relative text-xl md:text-2xl font-black leading-snug"
+                    style={{ color: 'rgba(201,168,76,0.85)' }}
                   >
-                    {featured.category}
+                    {featured.title}
                   </p>
                 </div>
+
+                {/* Right panel — detalhes */}
                 <div className="flex flex-col justify-center p-8 space-y-4" style={{ background: 'rgba(201,168,76,0.03)' }}>
                   <div className="flex items-center gap-3">
                     <span
@@ -88,46 +92,60 @@ export default function Insights({ articles }: InsightsProps) {
           </div>
         )}
 
-        {/* Grid dos demais artigos escolhidos */}
+        {/* Grid dos demais artigos */}
         {regular.length > 0 && (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-px mb-4" style={{ background: 'rgba(201,168,76,0.08)' }}>
-            {regular.map((article) => (
-              <Link key={article.id} href={`/insights/${article.slug}`} className="group block">
-                <div
-                  className="fade-in h-full p-8 flex flex-col transition-colors duration-300"
-                  style={{ background: '#0a0a09' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = '#111110')}
-                  onMouseLeave={e => (e.currentTarget.style.background = '#0a0a09')}
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <span
-                      className="text-[10px] font-semibold px-2 py-0.5 rounded"
-                      style={{ background: 'rgba(201,168,76,0.07)', color: '#7a7a70' }}
-                    >
-                      {article.category}
-                    </span>
-                    <span className="text-[11px]" style={{ color: '#3a3a38' }}>
-                      {article.published_at ? formatDateShort(article.published_at) : ''}
-                    </span>
+          <>
+            {/* Label "Artigos Publicados" + subtitulo */}
+            <div className="mb-6 flex items-end justify-between">
+              <div>
+                <p className="text-[11px] font-semibold tracking-[3px] uppercase mb-1" style={{ color: '#7a7a70' }}>
+                  Artigos publicados
+                </p>
+                <p className="text-sm" style={{ color: '#5a5a50' }}>
+                  Leituras sobre o que realmente muda — e o que quase sempre fica de fora.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-px mb-4" style={{ background: 'rgba(201,168,76,0.08)' }}>
+              {regular.map((article) => (
+                <Link key={article.id} href={`/insights/${article.slug}`} className="group block">
+                  <div
+                    className="fade-in h-full p-8 flex flex-col transition-colors duration-300"
+                    style={{ background: '#0a0a09' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#111110')}
+                    onMouseLeave={e => (e.currentTarget.style.background = '#0a0a09')}
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <span
+                        className="text-[10px] font-semibold px-2 py-0.5 rounded"
+                        style={{ background: 'rgba(201,168,76,0.07)', color: '#7a7a70' }}
+                      >
+                        {article.category}
+                      </span>
+                      <span className="text-[11px]" style={{ color: '#3a3a38' }}>
+                        {article.published_at ? formatDateShort(article.published_at) : ''}
+                      </span>
+                    </div>
+                    <h3 className="text-sm font-bold mb-3 line-clamp-2 flex-grow leading-snug" style={{ color: '#b0b0a8' }}>
+                      {article.title}
+                    </h3>
+                    <p className="text-xs mb-4 line-clamp-2 leading-relaxed" style={{ color: '#5a5a50' }}>
+                      {article.excerpt}
+                    </p>
+                    <div className="flex items-center justify-between pt-4 mt-auto" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                      <span className="text-[11px]" style={{ color: '#3a3a38' }}>
+                        {article.read_time || 5} min
+                      </span>
+                      <span className="text-xs font-semibold transition-transform group-hover:translate-x-1" style={{ color: '#c9a84c' }}>
+                        →
+                      </span>
+                    </div>
                   </div>
-                  <h3 className="text-sm font-bold mb-3 line-clamp-2 flex-grow leading-snug" style={{ color: '#b0b0a8' }}>
-                    {article.title}
-                  </h3>
-                  <p className="text-xs mb-4 line-clamp-2 leading-relaxed" style={{ color: '#5a5a50' }}>
-                    {article.excerpt}
-                  </p>
-                  <div className="flex items-center justify-between pt-4 mt-auto" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-                    <span className="text-[11px]" style={{ color: '#3a3a38' }}>
-                      {article.read_time || 5} min
-                    </span>
-                    <span className="text-xs font-semibold transition-transform group-hover:translate-x-1" style={{ color: '#c9a84c' }}>
-                      →
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+                </Link>
+              ))}
+            </div>
+          </>
         )}
 
         {/* Ver todos */}
