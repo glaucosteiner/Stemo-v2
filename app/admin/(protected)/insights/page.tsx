@@ -191,6 +191,15 @@ export default function InsightsAdminPage() {
               />
             </div>
 
+            {showPreview && formData.content && (
+              <div className="rounded-lg border border-white/10 bg-white/5 p-6">
+                <p className="text-xs text-slate-500 uppercase font-semibold mb-4">Preview do Conteúdo</p>
+                <div className="prose prose-invert prose-sm max-w-none text-slate-300">
+                  <Markdown remarkPlugins={[remarkGfm]}>{formData.content}</Markdown>
+                </div>
+              </div>
+            )}
+
             <div className="grid md:grid-cols-3 gap-6">
               <div>
                 <label className="block text-sm font-semibold text-white mb-2">Tempo de Leitura (min)</label>
