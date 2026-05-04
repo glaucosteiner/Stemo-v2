@@ -8,8 +8,9 @@ interface InsightsProps {
 }
 
 export default function Insights({ articles }: InsightsProps) {
-  const featured = articles.find((a) => a.is_featured)
-  const regular = articles.filter((a) => !a.is_featured)
+  // Primeiro artigo vira o card grande; os demais vao para o grid
+  const featured = articles[0] ?? null
+  const regular = articles.slice(1)
 
   return (
     <section id="insights" className="py-24 px-6" style={{ background: '#0a0a09' }}>
@@ -78,7 +79,7 @@ export default function Insights({ articles }: InsightsProps) {
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-xs" style={{ color: '#4a4a40' }}>Por {featured.author}</span>
                     <span className="text-xs font-semibold transition-all group-hover:translate-x-1" style={{ color: '#c9a84c' }}>
-                      Ler artigo &rarr;
+                      Ler artigo →
                     </span>
                   </div>
                 </div>
@@ -87,9 +88,9 @@ export default function Insights({ articles }: InsightsProps) {
           </div>
         )}
 
-        {/* Grid dos demais artigos em destaque */}
+        {/* Grid dos demais artigos escolhidos */}
         {regular.length > 0 && (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-px mb-16" style={{ background: 'rgba(201,168,76,0.08)' }}>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-px mb-4" style={{ background: 'rgba(201,168,76,0.08)' }}>
             {regular.map((article) => (
               <Link key={article.id} href={`/insights/${article.slug}`} className="group block">
                 <div
@@ -120,7 +121,7 @@ export default function Insights({ articles }: InsightsProps) {
                       {article.read_time || 5} min
                     </span>
                     <span className="text-xs font-semibold transition-transform group-hover:translate-x-1" style={{ color: '#c9a84c' }}>
-                      &rarr;
+                      →
                     </span>
                   </div>
                 </div>
@@ -129,14 +130,14 @@ export default function Insights({ articles }: InsightsProps) {
           </div>
         )}
 
-        {/* Botao ver todos */}
-        <div className="text-center mt-4">
+        {/* Ver todos */}
+        <div className="text-center py-12">
           <Link
             href="/insights"
             className="inline-flex items-center gap-3 px-8 py-4 rounded-lg text-sm font-semibold transition-all"
-            style={{ border: '1px solid rgba(201,168,76,0.25)', color: '#c9a84c', background: 'rgba(201,168,76,0.05)' }}
+            style={{ border: '1px solid rgba(201,168,76,0.3)', color: '#c9a84c', background: 'rgba(201,168,76,0.06)' }}
           >
-            Ver todos os artigos &rarr;
+            Ver todos os artigos →
           </Link>
         </div>
 
