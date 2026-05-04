@@ -1,4 +1,4 @@
-import { createServerClient } from '@/lib/supabase-server'
+﻿import { createServerClient } from '@/lib/supabase-server'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     .single()
 
   if (!product) {
-    return { title: 'Produto não encontrado' }
+    return { title: 'Produto nÃ£o encontrado' }
   }
 
   return {
@@ -104,7 +104,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <div className="mb-16">
               <h2 className="text-2xl font-bold text-white mb-8">Funcionalidades</h2>
               <div className="grid md:grid-cols-2 gap-4">
-                {product.features.map((feature, i) => (
+                {product.features.map((feature: string, i: number) => (
                   <div key={i} className="p-6 rounded-xl border border-white/5 bg-gradient-to-br from-slate-900/50 to-transparent flex items-start gap-3">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-400 flex-shrink-0 mt-1">
                       <path d="M20 6L9 17l-5-5" />
@@ -118,13 +118,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
           {/* CTA */}
           <div className="mb-16 p-8 rounded-xl border border-blue-500/30 bg-gradient-to-br from-blue-500/10 to-transparent">
-            <h3 className="text-xl font-bold text-white mb-4">Pronto para começar?</h3>
-            <p className="text-slate-400 mb-6">Entre em contato conosco para discutir como este produto pode transformar seu negócio.</p>
+            <h3 className="text-xl font-bold text-white mb-4">Pronto para comeÃ§ar?</h3>
+            <p className="text-slate-400 mb-6">Entre em contato conosco para discutir como este produto pode transformar seu negÃ³cio.</p>
             <a
               href="#contato"
               className="inline-flex bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold px-8 py-3 rounded-lg hover:shadow-lg hover:shadow-blue-500/30 transition-all"
             >
-              Agende uma demonstração
+              Agende uma demonstraÃ§Ã£o
             </a>
           </div>
 
@@ -147,7 +147,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                       </h4>
                       <p className="text-sm text-slate-400 line-clamp-2 mb-4">{related.description}</p>
                       <span className="text-blue-400 group-hover:translate-x-1 transition-transform font-semibold text-sm">
-                        →
+                        â†’
                       </span>
                     </div>
                   </Link>
