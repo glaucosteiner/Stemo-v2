@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       await resend.emails.send({
         from: 'Stemo Site <noreply@stemo.com.br>',
         to: 'glauco.motta@stemo.com.br',
-        replyTo: email,
+        reply_to: email,
         subject: `Novo contato: ${name}${company ? ` — ${company}` : ''}`,
         html: `
           <div style="font-family: Georgia, serif; max-width: 600px; margin: 0 auto; color: #292524;">
