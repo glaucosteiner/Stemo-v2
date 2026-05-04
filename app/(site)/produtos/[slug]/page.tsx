@@ -1,16 +1,25 @@
-﻿import { createServerClient } from '@/lib/supabase-server'
+import { createServerClient } from '@/lib/supabase-server'
+import { createClient } from '@supabase/supabase-js'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/sections/Footer'
 
+// Cliente simples sem cookies - usado em generateStaticParams (build time)
+function createBuildTimeClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+}
+
 interface ProductPageProps {
   params: { slug: string }
 }
 
 export async function generateStaticParams() {
-  const supabase = await createServerClient()
+  const supabase = createBuildTimeClient()
   const { data } = await supabase.from('products').select('slug').eq('is_published', true)
 
   return (data || []).map((product) => ({
