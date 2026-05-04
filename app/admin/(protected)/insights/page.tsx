@@ -177,30 +177,34 @@ export default function InsightsAdminPage() {
               />
             </div>
 
-            {showPreview && formData.content ? (
+            {showPreview && (
               <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-6">
                 <p className="text-xs text-amber-400/80 uppercase font-semibold mb-4 tracking-widest">Preview do artigo</p>
-                <div className="text-slate-300 leading-relaxed space-y-4 text-sm">
-                  <Markdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      h1: ({children}) => <h1 className="text-2xl font-bold text-white mt-6 mb-3">{children}</h1>,
-                      h2: ({children}) => <h2 className="text-xl font-bold text-white mt-5 mb-2">{children}</h2>,
-                      h3: ({children}) => <h3 className="text-lg font-semibold text-white mt-4 mb-2">{children}</h3>,
-                      p: ({children}) => <p className="text-slate-300 mb-3 leading-relaxed">{children}</p>,
-                      strong: ({children}) => <strong className="text-white font-semibold">{children}</strong>,
-                      ul: ({children}) => <ul className="list-disc list-inside space-y-1 text-slate-300 mb-3">{children}</ul>,
-                      ol: ({children}) => <ol className="list-decimal list-inside space-y-1 text-slate-300 mb-3">{children}</ol>,
-                      li: ({children}) => <li className="text-slate-300">{children}</li>,
-                      blockquote: ({children}) => <blockquote className="border-l-4 border-amber-500/50 pl-4 italic text-slate-400 my-4">{children}</blockquote>,
-                      code: ({children}) => <code className="bg-white/10 px-1.5 py-0.5 rounded text-xs font-mono text-amber-300">{children}</code>,
-                    }}
-                  >
-                    {formData.content}
-                  </Markdown>
-                </div>
+                {formData.content ? (
+                  <div className="text-slate-300 leading-relaxed space-y-4 text-sm">
+                    <Markdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        h1: ({children}: any) => <h1 className="text-2xl font-bold text-white mt-6 mb-3">{children}</h1>,
+                        h2: ({children}: any) => <h2 className="text-xl font-bold text-white mt-5 mb-2">{children}</h2>,
+                        h3: ({children}: any) => <h3 className="text-lg font-semibold text-white mt-4 mb-2">{children}</h3>,
+                        p: ({children}: any) => <p className="text-slate-300 mb-3 leading-relaxed">{children}</p>,
+                        strong: ({children}: any) => <strong className="text-white font-semibold">{children}</strong>,
+                        ul: ({children}: any) => <ul className="list-disc list-inside space-y-1 text-slate-300 mb-3">{children}</ul>,
+                        ol: ({children}: any) => <ol className="list-decimal list-inside space-y-1 text-slate-300 mb-3">{children}</ol>,
+                        li: ({children}: any) => <li className="text-slate-300">{children}</li>,
+                        blockquote: ({children}: any) => <blockquote className="border-l-4 border-amber-500/50 pl-4 italic text-slate-400 my-4">{children}</blockquote>,
+                        code: ({children}: any) => <code className="bg-white/10 px-1.5 py-0.5 rounded text-xs font-mono text-amber-300">{children}</code>,
+                      }}
+                    >
+                      {formData.content}
+                    </Markdown>
+                  </div>
+                ) : (
+                  <p className="text-slate-500 italic text-sm">Nenhum conteúdo para exibir. Escreva algo no campo acima.</p>
+                )}
               </div>
-            ) : null}
+            )}
 
             <div className="grid md:grid-cols-3 gap-6">
               <div>
