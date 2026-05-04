@@ -6,13 +6,7 @@ import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/sections/Footer'
 
-// Cliente simples sem cookies - usado em generateStaticParams (build time)
-function createBuildTimeClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-}
+
 
 
 // Cliente simples sem cookies - usado em generateStaticParams (build time)
