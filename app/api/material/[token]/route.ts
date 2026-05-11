@@ -3,79 +3,71 @@ import { createAdminClient } from '@/lib/supabase'
 
 const PROTECTION_SCRIPT = `<script>
 (function(){
+  /* ── Toast de aviso ── */
+  function _toast(msg){
+    var t=document.createElement('div');
+    t.textContent=msg;
+    t.style.cssText='position:fixed;bottom:24px;right:24px;z-index:99999;'+
+      'background:rgba(15,15,15,0.92);color:#888;font-family:sans-serif;'+
+      'font-size:11px;letter-spacing:1.5px;text-transform:uppercase;'+
+      'padding:10px 18px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);'+
+      'pointer-events:none;opacity:0;transition:opacity .3s;';
+    document.body.appendChild(t);
+    requestAnimationFrame(function(){t.style.opacity='1';});
+    setTimeout(function(){t.style.opacity='0';setTimeout(function(){t.remove();},400);},2500);
+  }
+
   /* ── Bloqueia botão direito ── */
-  document.addEventListener('contextmenu',function(e){e.preventDefault();return false;},true);
+  document.addEventListener('contextmenu',function(e){
+    e.preventDefault();
+    _toast('Conteúdo protegido');
+    return false;
+  },true);
 
   /* ── Bloqueia atalhos de teclado ── */
   document.addEventListener('keydown',function(e){
     var k=(e.key||'').toUpperCase();
-    /* F12 */
-    if(e.key==='F12'){e.preventDefault();e.stopImmediatePropagation();return false;}
-    /* Ctrl/Cmd + Shift + I/J/C/K (DevTools) */
-    if((e.ctrlKey||e.metaKey)&&e.shiftKey&&['I','J','C','K'].includes(k)){e.preventDefault();return false;}
-    /* Ctrl/Cmd + U (ver fonte) */
-    if((e.ctrlKey||e.metaKey)&&k==='U'){e.preventDefault();return false;}
-    /* Ctrl/Cmd + S (salvar) */
-    if((e.ctrlKey||e.metaKey)&&k==='S'){e.preventDefault();return false;}
-    /* Ctrl/Cmd + P (imprimir/salvar PDF) */
-    if((e.ctrlKey||e.metaKey)&&k==='P'){e.preventDefault();return false;}
-    /* Ctrl/Cmd + A (selecionar tudo) */
-    if((e.ctrlKey||e.metaKey)&&k==='A'){e.preventDefault();return false;}
+    var blocked=false;
+    if(e.key==='F12'){blocked=true;}
+    if((e.ctrlKey||e.metaKey)&&e.shiftKey&&['I','J','C','K'].includes(k)){blocked=true;}
+    if((e.ctrlKey||e.metaKey)&&['U','S','P'].includes(k)){blocked=true;}
+    if(blocked){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      _toast('Conteúdo protegido');
+      return false;
+    }
   },true);
 
-  /* ── Bloqueia seleção de texto e drag ── */
+  /* ── Bloqueia seleção, drag e cópia ── */
   document.addEventListener('selectstart',function(e){e.preventDefault();},true);
   document.addEventListener('dragstart',function(e){e.preventDefault();},true);
-  document.addEventListener('copy',function(e){e.preventDefault();},true);
+  document.addEventListener('copy',function(e){
+    e.preventDefault();
+    _toast('Conteúdo protegido');
+  },true);
 
-  /* ── CSS: user-select none em tudo ── */
+  /* ── CSS: desabilita seleção em tudo ── */
   var _s=document.createElement('style');
   _s.textContent='*{-webkit-user-select:none!important;user-select:none!important;'+
     '-webkit-touch-callout:none!important;-moz-user-select:none!important;}'+
     'img{pointer-events:none!important;-webkit-user-drag:none!important;}';
-  var _injectCss=function(){if(document.head)document.head.appendChild(_s);};
-  if(document.head){_injectCss();}else{document.addEventListener('DOMContentLoaded',_injectCss);}
+  var _inject=function(){if(document.head)document.head.appendChild(_s);};
+  if(document.head){_inject();}
+  else{document.addEventListener('DOMContentLoaded',_inject);}
 
-  /* ── Detecção de DevTools aberto (tamanho de janela) ── */
-  var _devOpen=false;
-  var _blank=function(){
-    if(!_devOpen){
-      _devOpen=true;
-      try{
-        document.documentElement.innerHTML=
-          '<body style="margin:0;background:#09090b;display:flex;height:100vh;'+
-          'align-items:center;justify-content:center;">'+
-          '<p style="color:#27272a;font-family:sans-serif;font-size:13px;letter-spacing:1px;">'+
-          'CONTEÚDO PROTEGIDO</p></body>';
-      }catch(x){}
-    }
-  };
-  var _check=function(){
-    if(window.outerWidth-window.innerWidth>160||window.outerHeight-window.innerHeight>160){
-      _blank();
-    }
-  };
-  setInterval(_check,600);
-  window.addEventListener('resize',_check);
-
-  /* ── Trap debugger para atrasar inspeção manual ── */
-  var _dbg=function(){};
-  try{
-    _dbg=new Function('debugger;');
-    setInterval(_dbg,2000);
-  }catch(x){}
+  /* ── Debugger trap — atrasa inspeção via console ── */
+  try{setInterval(new Function('debugger;'),3000);}catch(x){}
 })();
 </script>`
 
 function injectProtection(html: string): string {
-  // Injeta o script logo após <head> (ou cria o head se não existir)
-  if (/<head[^>]*>/i.test(html)) {
+  if (/<head[\s>]/i.test(html)) {
     return html.replace(/(<head[^>]*>)/i, `$1${PROTECTION_SCRIPT}`)
   }
-  if (/<html[^>]*>/i.test(html)) {
+  if (/<html[\s>]/i.test(html)) {
     return html.replace(/(<html[^>]*>)/i, `$1<head>${PROTECTION_SCRIPT}</head>`)
   }
-  // Fallback: injeta no início
   return PROTECTION_SCRIPT + html
 }
 
@@ -103,12 +95,9 @@ export async function GET(
     status: 200,
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
-      // Sem cache — cada acesso busca fresco do servidor
       'Cache-Control': 'no-store, no-cache, must-revalidate, private',
       'Pragma': 'no-cache',
-      // Impede embedding em outros sites
       'X-Frame-Options': 'SAMEORIGIN',
-      // Não indexar
       'X-Robots-Tag': 'noindex, nofollow',
     },
   })
