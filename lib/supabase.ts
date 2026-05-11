@@ -68,6 +68,27 @@ export type SiteConfig = {
   updated_at: string
 }
 
+export type Material = {
+  id: string
+  token: string
+  title: string
+  description: string | null
+  html_content: string
+  is_active: boolean
+  created_at: string
+}
+
+export type AccessLog = {
+  id: string
+  material_id: string
+  ip: string | null
+  user_agent: string | null
+  device_type: string | null
+  browser: string | null
+  os: string | null
+  accessed_at: string
+}
+
 // Supabase clients
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!

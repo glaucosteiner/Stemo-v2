@@ -22,6 +22,7 @@ export default function AdminSidebar() {
     { icon: '❓', label: 'FAQ', href: '/admin/faq' },
     { icon: '⚙️', label: 'Configurações', href: '/admin/config' },
     { icon: '📬', label: 'Contatos', href: '/admin/contatos' },
+    { icon: '🔐', label: 'Materiais', href: '/admin/materiais' },
   ]
 
   return (
