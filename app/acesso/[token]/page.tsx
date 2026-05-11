@@ -30,57 +30,44 @@ function parseUserAgent(ua: string) {
   return { browser, os, device }
 }
 
-async function logAccess(materialId: string, headersList: Awaited<ReturnType<typeof headers>>) {
-  try {
-    const supabase = createAdminClient()
-
-    // IP real do visitante (Vercel coloca o IP do cliente no x-forwarded-for)
-    const ip =
-      headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-      headersList.get('x-real-ip') ||
-      'unknown'
-
-    const ua = headersList.get('user-agent') || ''
-    const { browser, os, device } = parseUserAgent(ua)
-
-    // Geolocalização via headers injetados automaticamente pelo Vercel Edge Network
-    const cityEncoded = headersList.get('x-vercel-ip-city') || ''
-    const city = cityEncoded ? decodeURIComponent(cityEncoded) : null
-    const region = headersList.get('x-vercel-ip-country-region') || null  // ex: "SP", "RJ"
-    const country = headersList.get('x-vercel-ip-country') || null         // ex: "BR"
-
-    await supabase.from('access_logs').insert({
-      material_id: materialId,
-      ip,
-      user_agent: ua,
-      device_type: device,
-      browser,
-      os,
-      city,
-      region,
-      country,
-    })
-  } catch (e) {
-    console.error('logAccess error', e)
-  }
-}
-
 export default async function AcessoPage({ params }: Props) {
   const { token } = await params
   const supabase = createAdminClient()
 
   const { data: material } = await supabase
     .from('materials')
-    .select('id, title, html_content')
+    .select('id, title')
     .eq('token', token)
     .eq('is_active', true)
     .single()
 
   if (!material) notFound()
 
-  const headersList = await headers()
-  await logAccess(material.id, headersList)
+  // Registrar acesso
+  try {
+    const headersList = await headers()
+    const ip =
+      headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      headersList.get('x-real-ip') ||
+      'unknown'
+    const ua = headersList.get('user-agent') || ''
+    const { browser, os, device } = parseUserAgent(ua)
 
+    const cityEncoded = headersList.get('x-vercel-ip-city') || ''
+    const city = cityEncoded ? decodeURIComponent(cityEncoded) : null
+    const region = headersList.get('x-vercel-ip-country-region') || null
+    const country = headersList.get('x-vercel-ip-country') || null
+
+    await supabase.from('access_logs').insert({
+      material_id: material.id,
+      ip, user_agent: ua, device_type: device, browser, os,
+      city, region, country,
+    })
+  } catch (e) {
+    console.error('logAccess error', e)
+  }
+
+  // Renderiza iframe apontando para a API — HTML nunca fica exposto no DOM
   return (
     <html lang="pt-BR">
       <head>
@@ -89,15 +76,26 @@ export default async function AcessoPage({ params }: Props) {
         <title>{material.title}</title>
         <style>{`
           * { margin: 0; padding: 0; box-sizing: border-box; }
-          html, body { height: 100%; overflow: hidden; background: #08090d; }
+          html, body { height: 100%; overflow: hidden; background: #09090b; }
           iframe { width: 100%; height: 100vh; border: none; display: block; }
         `}</style>
+        {/* Bloqueia também no wrapper (página pai do iframe) */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          document.addEventListener('contextmenu',function(e){e.preventDefault();},true);
+          document.addEventListener('keydown',function(e){
+            if(e.key==='F12'){e.preventDefault();}
+            if((e.ctrlKey||e.metaKey)&&e.shiftKey&&['I','J','C'].includes(e.key.toUpperCase())){e.preventDefault();}
+            if((e.ctrlKey||e.metaKey)&&e.key.toUpperCase()==='U'){e.preventDefault();}
+          },true);
+        ` }} />
       </head>
       <body>
+        {/* allow-same-origin permite que o script de proteção do iframe funcione */}
         <iframe
-          srcDoc={material.html_content}
+          src={`/api/material/${token}`}
           sandbox="allow-scripts allow-same-origin"
           title={material.title}
+          referrerPolicy="no-referrer"
         />
       </body>
     </html>
