@@ -16,7 +16,8 @@ function parseUserAgent(ua: string) {
     /MSIE|Trident/.test(ua) ? 'IE' : 'Outro'
 
   const os =
-    /Windows NT/.test(ua) ? 'Windows' :
+    /Windows NT 10/.test(ua) ? 'Windows 10/11' :
+    /Windows NT 6/.test(ua) ? 'Windows 7/8' :
     /Mac OS X/.test(ua) ? 'macOS' :
     /Android/.test(ua) ? 'Android' :
     /iPhone|iPad/.test(ua) ? 'iOS' :
@@ -29,17 +30,35 @@ function parseUserAgent(ua: string) {
   return { browser, os, device }
 }
 
-async function logAccess(materialId: string, ip: string, ua: string) {
+async function logAccess(materialId: string, headersList: Awaited<ReturnType<typeof headers>>) {
   try {
     const supabase = createAdminClient()
-    const { browser, os, device_type } = { ...parseUserAgent(ua), device_type: parseUserAgent(ua).device }
+
+    // IP real do visitante (Vercel coloca o IP do cliente no x-forwarded-for)
+    const ip =
+      headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      headersList.get('x-real-ip') ||
+      'unknown'
+
+    const ua = headersList.get('user-agent') || ''
+    const { browser, os, device } = parseUserAgent(ua)
+
+    // Geolocalização via headers injetados automaticamente pelo Vercel Edge Network
+    const cityEncoded = headersList.get('x-vercel-ip-city') || ''
+    const city = cityEncoded ? decodeURIComponent(cityEncoded) : null
+    const region = headersList.get('x-vercel-ip-country-region') || null  // ex: "SP", "RJ"
+    const country = headersList.get('x-vercel-ip-country') || null         // ex: "BR"
+
     await supabase.from('access_logs').insert({
       material_id: materialId,
       ip,
       user_agent: ua,
-      device_type,
+      device_type: device,
       browser,
       os,
+      city,
+      region,
+      country,
     })
   } catch (e) {
     console.error('logAccess error', e)
@@ -59,17 +78,9 @@ export default async function AcessoPage({ params }: Props) {
 
   if (!material) notFound()
 
-  // Log the access
   const headersList = await headers()
-  const ip =
-    headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    headersList.get('x-real-ip') ||
-    'unknown'
-  const ua = headersList.get('user-agent') || ''
+  await logAccess(material.id, headersList)
 
-  await logAccess(material.id, ip, ua)
-
-  // Render the HTML full-page via iframe srcdoc
   return (
     <html lang="pt-BR">
       <head>

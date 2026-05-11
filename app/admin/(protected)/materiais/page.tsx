@@ -17,9 +17,7 @@ export default function MateriaisAdminPage() {
   const supabase = createBrowserClient()
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
 
-  useEffect(() => {
-    fetchMaterials()
-  }, [])
+  useEffect(() => { fetchMaterials() }, [])
 
   async function fetchMaterials() {
     setLoading(true)
@@ -29,36 +27,32 @@ export default function MateriaisAdminPage() {
       .order('created_at', { ascending: false })
     setMaterials(data || [])
 
-    // fetch access counts
     if (data && data.length > 0) {
       const ids = data.map((m: Material) => m.id)
       const { data: logData } = await supabase
         .from('access_logs')
         .select('material_id')
         .in('material_id', ids)
-
       const counts: Record<string, number> = {}
       ;(logData || []).forEach((l: { material_id: string }) => {
         counts[l.material_id] = (counts[l.material_id] || 0) + 1
       })
       setAccessCounts(counts)
     }
-
     setLoading(false)
   }
 
   async function fetchLogs(materialId: string) {
-    if (logs[materialId]) {
-      setSelectedId(selectedId === materialId ? null : materialId)
-      return
+    if (selectedId === materialId) { setSelectedId(null); return }
+    if (!logs[materialId]) {
+      const { data } = await supabase
+        .from('access_logs')
+        .select('*')
+        .eq('material_id', materialId)
+        .order('accessed_at', { ascending: false })
+        .limit(100)
+      setLogs(prev => ({ ...prev, [materialId]: data || [] }))
     }
-    const { data } = await supabase
-      .from('access_logs')
-      .select('*')
-      .eq('material_id', materialId)
-      .order('accessed_at', { ascending: false })
-      .limit(50)
-    setLogs(prev => ({ ...prev, [materialId]: data || [] }))
     setSelectedId(materialId)
   }
 
@@ -77,10 +71,7 @@ export default function MateriaisAdminPage() {
   }
 
   async function toggleActive(material: Material) {
-    await supabase
-      .from('materials')
-      .update({ is_active: !material.is_active })
-      .eq('id', material.id)
+    await supabase.from('materials').update({ is_active: !material.is_active }).eq('id', material.id)
     await fetchMaterials()
   }
 
@@ -92,8 +83,7 @@ export default function MateriaisAdminPage() {
   }
 
   function copyLink(token: string) {
-    const url = `${baseUrl}/acesso/${token}`
-    navigator.clipboard.writeText(url)
+    navigator.clipboard.writeText(`${baseUrl}/acesso/${token}`)
     setCopied(token)
     setTimeout(() => setCopied(null), 2000)
   }
@@ -103,6 +93,11 @@ export default function MateriaisAdminPage() {
       day: '2-digit', month: '2-digit', year: '2-digit',
       hour: '2-digit', minute: '2-digit',
     })
+  }
+
+  function formatLocation(log: AccessLog) {
+    const parts = [log.city, log.region, log.country].filter(Boolean)
+    return parts.length > 0 ? parts.join(' · ') : '—'
   }
 
   const inputCls = "w-full bg-[#0d1929] border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500/50 transition-colors"
@@ -115,7 +110,7 @@ export default function MateriaisAdminPage() {
         <div>
           <h1 className="text-2xl font-bold text-white mb-1">Materiais Privados</h1>
           <p className="text-slate-400 text-sm">
-            Links exclusivos com rastreamento de acesso (IP, dispositivo, browser)
+            Links exclusivos com rastreamento de IP, dispositivo e localização
           </p>
         </div>
         <button
@@ -169,10 +164,7 @@ export default function MateriaisAdminPage() {
               >
                 {saving ? 'Salvando...' : '💾 Salvar Material'}
               </button>
-              <button
-                onClick={() => setShowForm(false)}
-                className={`${btnBase} bg-white/5 hover:bg-white/10 text-slate-400`}
-              >
+              <button onClick={() => setShowForm(false)} className={`${btnBase} bg-white/5 hover:bg-white/10 text-slate-400`}>
                 Cancelar
               </button>
             </div>
@@ -193,27 +185,16 @@ export default function MateriaisAdminPage() {
             <div key={m.id} className="bg-[#050d1a] border border-white/10 rounded-xl overflow-hidden">
               {/* Material row */}
               <div className="flex items-center gap-4 p-5">
-                {/* Status dot */}
                 <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${m.is_active ? 'bg-green-500' : 'bg-slate-600'}`} />
-
-                {/* Info */}
                 <div className="flex-1 min-w-0">
                   <p className="text-white font-semibold text-sm truncate">{m.title}</p>
-                  {m.description && (
-                    <p className="text-slate-500 text-xs mt-0.5 truncate">{m.description}</p>
-                  )}
-                  <p className="text-slate-600 text-xs mt-1 font-mono truncate">
-                    /acesso/{m.token}
-                  </p>
+                  {m.description && <p className="text-slate-500 text-xs mt-0.5 truncate">{m.description}</p>}
+                  <p className="text-slate-600 text-xs mt-1 font-mono truncate">/acesso/{m.token}</p>
                 </div>
-
-                {/* Access count */}
                 <div className="text-center flex-shrink-0">
                   <p className="text-2xl font-black text-blue-400">{accessCounts[m.id] || 0}</p>
                   <p className="text-slate-600 text-[10px] uppercase tracking-wider">acessos</p>
                 </div>
-
-                {/* Actions */}
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <button
                     onClick={() => copyLink(m.token)}
@@ -246,7 +227,7 @@ export default function MateriaisAdminPage() {
               {selectedId === m.id && (
                 <div className="border-t border-white/10 bg-[#030a14] p-5">
                   <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-3">
-                    Últimos 50 Acessos
+                    Últimos 100 Acessos
                   </p>
                   {!logs[m.id] || logs[m.id].length === 0 ? (
                     <p className="text-slate-600 text-sm">Nenhum acesso registrado ainda.</p>
@@ -255,8 +236,9 @@ export default function MateriaisAdminPage() {
                       <table className="w-full text-xs">
                         <thead>
                           <tr className="text-slate-500 text-left">
-                            <th className="pb-2 pr-4 font-semibold">Data/Hora</th>
+                            <th className="pb-2 pr-4 font-semibold whitespace-nowrap">Data/Hora</th>
                             <th className="pb-2 pr-4 font-semibold">IP</th>
+                            <th className="pb-2 pr-4 font-semibold">Localização</th>
                             <th className="pb-2 pr-4 font-semibold">Dispositivo</th>
                             <th className="pb-2 pr-4 font-semibold">Browser</th>
                             <th className="pb-2 font-semibold">OS</th>
@@ -266,7 +248,8 @@ export default function MateriaisAdminPage() {
                           {logs[m.id].map(log => (
                             <tr key={log.id} className="border-t border-white/5 text-slate-400">
                               <td className="py-2 pr-4 font-mono whitespace-nowrap">{formatDate(log.accessed_at)}</td>
-                              <td className="py-2 pr-4 font-mono text-blue-400">{log.ip}</td>
+                              <td className="py-2 pr-4 font-mono text-blue-400 whitespace-nowrap">{log.ip}</td>
+                              <td className="py-2 pr-4 text-emerald-400 whitespace-nowrap">{formatLocation(log)}</td>
                               <td className="py-2 pr-4">{log.device_type}</td>
                               <td className="py-2 pr-4">{log.browser}</td>
                               <td className="py-2">{log.os}</td>

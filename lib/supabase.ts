@@ -86,6 +86,9 @@ export type AccessLog = {
   device_type: string | null
   browser: string | null
   os: string | null
+  city: string | null
+  region: string | null
+  country: string | null
   accessed_at: string
 }
 
