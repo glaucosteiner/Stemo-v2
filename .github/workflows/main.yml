@@ -1,0 +1,29 @@
+name: Keep Supabase Projects Active
+
+on:
+  schedule:
+      - cron: '0 */6 * * *'  # Executa a cada 6 horas
+        workflow_dispatch:
+
+        jobs:
+          ping-supabase:
+              runs-on: ubuntu-latest
+                  strategy:
+                        matrix:
+                                include:
+                                          - project: stemo-v2
+                                                      url: https://chjtgayotmwenucvjdvu.supabase.co
+                                                                  key: ${{ secrets.SUPABASE_STEMO_V2_KEY }}
+                                                                            - project: sustenergy
+                                                                                        url: https://zztcjdnfifmmtffcpijs.supabase.co
+                                                                                                    key: ${{ secrets.SUPABASE_SUSTENERGY_KEY }}
+                                                                                                              - project: radar-executivo
+                                                                                                                          url: https://glnisdhpetxnizgagvkz.supabase.co
+                                                                                                                                      key: ${{ secrets.SUPABASE_RADAR_KEY }}
+                                                                                                                                      
+                                                                                                                                          steps:
+                                                                                                                                                - name: Ping Supabase ${{ matrix.project }}
+                                                                                                                                                        run: |
+                                                                                                                                                                  curl -X GET "${{ matrix.url }}/rest/v1/" \
+                                                                                                                                                                              -H "Authorization: Bearer ${{ matrix.key }}" \
+                                                                                                                                                                                          -H "Content-Type: application/json"
